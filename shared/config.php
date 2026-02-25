@@ -19,11 +19,13 @@ define('ROLE_ADMIN', 'Administrateur');
 define('ROLE_VALIDATEUR', 'Validateur');
 define('ROLE_DEMANDEUR', 'Demandeur');
 
-class Database {
+class Database
+{
     private static $instance = null;
     private $connection;
 
-    private function __construct() {
+    private function __construct()
+    {
         try {
             $dsn = sprintf(
                 'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
@@ -31,7 +33,7 @@ class Database {
                 DB_PORT,
                 DB_NAME
             );
-            
+
             $this->connection = new PDO($dsn, DB_USER, DB_PASS, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -39,7 +41,7 @@ class Database {
             ]);
         } catch (PDOException $e) {
 
-            die("Erreur de connexion à la base de données: " . $e->getMessage() . 
+            die("Erreur de connexion à la base de données: " . $e->getMessage() .
                 "<br><br><strong>Assurez-vous que:</strong><br>" .
                 "1. MySQL est démarré<br>" .
                 "2. La base de données 'gestion_demandes' existe<br>" .
@@ -47,25 +49,29 @@ class Database {
         }
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;
     }
 
-    public function getConnection() {
+    public function getConnection()
+    {
         return $this->connection;
     }
 
     private function __clone() {}
 }
 
-function getDB() {
+function getDB()
+{
     return Database::getInstance()->getConnection();
 }
 
-function getConnection() {
+function getConnection()
+{
     return getDB();
 }
 
@@ -73,23 +79,27 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-function isLoggedIn() {
+function isLoggedIn()
+{
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
-function getCurrentUserId() {
+function getCurrentUserId()
+{
     return $_SESSION['user_id'] ?? null;
 }
 
-function getCurrentUserRole() {
+function getCurrentUserRole()
+{
     return $_SESSION['user_role'] ?? null;
 }
 
-function getCurrentUser() {
+function getCurrentUser()
+{
     if (!isLoggedIn()) {
         return null;
     }
-    
+
     $pdo = getDB();
     $stmt = $pdo->prepare("
         SELECT u.*, d.nom as departement_nom, e.nom as equipe_nom 
@@ -102,32 +112,38 @@ function getCurrentUser() {
     return $stmt->fetch();
 }
 
-function hasRole($role) {
+function hasRole($role)
+{
     return getCurrentUserRole() === $role;
 }
 
-function isAdmin() {
+function isAdmin()
+{
     return hasRole(ROLE_ADMIN);
 }
 
-function isValidateur() {
+function isValidateur()
+{
     return hasRole(ROLE_VALIDATEUR);
 }
 
-function isDemandeur() {
+function isDemandeur()
+{
     return hasRole(ROLE_DEMANDEUR);
 }
 
-function requireLogin() {
+function requireLogin()
+{
     if (!isLoggedIn()) {
         header('Location: ' . LOGIN_URL . '/index.php');
         exit();
     }
 }
 
-function redirectToUserSpace() {
+function redirectToUserSpace()
+{
     $role = getCurrentUserRole();
-    
+
     switch ($role) {
         case ROLE_ADMIN:
             header('Location: ' . ADMIN_URL . '/index.php');
@@ -144,26 +160,28 @@ function redirectToUserSpace() {
     exit();
 }
 
-function requireRole($allowedRoles) {
+function requireRole($allowedRoles)
+{
     requireLogin();
-    
+
     if (!is_array($allowedRoles)) {
         $allowedRoles = [$allowedRoles];
     }
-    
+
     if (!in_array(getCurrentUserRole(), $allowedRoles)) {
 
         redirectToUserSpace();
     }
 }
 
-function logout() {
+function logout()
+{
 
     if (isset($_COOKIE['remember_token'])) {
         $pdo = getDB();
         $stmt = $pdo->prepare("UPDATE users SET remember_token = NULL WHERE id = ?");
         $stmt->execute([getCurrentUserId()]);
-        
+
         setcookie('remember_token', '', time() - 3600, '/');
     }
 
@@ -173,7 +191,8 @@ function logout() {
     exit();
 }
 
-function createNotification($userId, $message, $type = 'info', $demandeId = null) {
+function createNotification($userId, $message, $type = 'info', $demandeId = null)
+{
     $pdo = getDB();
     $stmt = $pdo->prepare("
         INSERT INTO notifications (user_id, demande_id, message, type) 
@@ -182,7 +201,8 @@ function createNotification($userId, $message, $type = 'info', $demandeId = null
     return $stmt->execute([$userId, $demandeId, $message, $type]);
 }
 
-function getUnreadNotifications($userId, $limit = 10) {
+function getUnreadNotifications($userId, $limit = 10)
+{
     $pdo = getDB();
     $stmt = $pdo->prepare("
         SELECT * FROM notifications 
@@ -194,7 +214,8 @@ function getUnreadNotifications($userId, $limit = 10) {
     return $stmt->fetchAll();
 }
 
-function countUnreadNotifications($userId) {
+function countUnreadNotifications($userId)
+{
     $pdo = getDB();
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND lu = 0");
     $stmt->execute([$userId]);
@@ -202,3 +223,6 @@ function countUnreadNotifications($userId) {
     return $result['count'];
 }
 ?>
+
+<!-- Good mb_convert_encoding
+good morning  -->
