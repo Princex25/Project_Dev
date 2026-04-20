@@ -1,0 +1,16 @@
+---
+- name: Deploy admin2 to Kubernetes
+  hosts: kubernetes
+  gather_facts: false
+  vars:
+    manifest_dir: "{{ playbook_dir }}/../kubernetes"
+  tasks:
+    - name: Check kubectl availability
+      ansible.builtin.command:
+        cmd: kubectl version --client --short
+      register: kubectl_version
+      changed_when: false
+
+    - name: Apply Kubernetes base
+      ansible.builtin.command:
+        cmd: kubectl apply -k {{ manifest_dir }}

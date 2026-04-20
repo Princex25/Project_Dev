@@ -1,0 +1,13 @@
+.git
+.gitignore
+.vscode
+docs/
+database/
+!database/unified_database.sql
+!database/Dockerfile
+**/*.docx
+**/*.pptx
+node_modules/
+vendor/
+.env
+.env.*

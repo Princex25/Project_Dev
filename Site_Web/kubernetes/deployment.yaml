@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin2-web
+  namespace: admin2
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: admin2-web
+  template:
+    metadata:
+      labels:
+        app: admin2-web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/your-org/admin2-web:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: admin2-config
+            - secretRef:
+                name: admin2-secret
+          volumeMounts:
+            - name: uploads
+              mountPath: /var/www/html/admin2/uploads/demandes
+          readinessProbe:
+            httpGet:
+              path: /admin2/php-login/index.php
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /admin2/php-login/index.php
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 20
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: admin2-uploads

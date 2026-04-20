@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: admin2-web
+  namespace: admin2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: admin2.local
+      http:
+        paths:
+          - path: /admin2
+            pathType: Prefix
+            backend:
+              service:
+                name: admin2-web
+                port:
+                  number: 80

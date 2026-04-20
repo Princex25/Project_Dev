@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin2-config
+  namespace: admin2
+data:
+  DB_HOST: mysql.example.internal
+  DB_PORT: "3306"
+  DB_NAME: gestion_demandes
+  BASE_URL: /admin2
