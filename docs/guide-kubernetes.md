@@ -1,71 +1,78 @@
 # Guide Kubernetes
 
-Ce guide decrit le deploiement de l'application dans Kubernetes.
+Ce guide decrit les manifestes Kubernetes du dossier `kubernetes/`.
 
-## Objectif
+## Vue d'ensemble
 
-Kubernetes sert ici a:
+Le kustomize deploie:
 
-- decrire l'application comme un ensemble de ressources declaratives.
-- exposer le service PHP via un Service et un Ingress.
-- isoler la configuration dans un ConfigMap et un Secret.
+- Frontend (`devops-project-frontend`) avec 2 replicas + HPA + PDB
+- Backend (`devops-project-backend`) avec 2 replicas + HPA + PDB
+- MySQL (`mysql`) avec PVC
+- Jenkins (`jenkins`) avec PVC
+- Monitoring: Prometheus + Grafana
+- cAdvisor (DaemonSet)
+- Ingress pour le routage `/devops-project` et `/devops-project/api`
 
-## Ressources fournies
+Les **conteneurs de secours** sont assures par:
 
-- Namespace: [kubernetes/namespace.yaml](../kubernetes/namespace.yaml)
-- ConfigMap: [kubernetes/configmap.yaml](../kubernetes/configmap.yaml)
-- Secret exemple: [kubernetes/secret.example.yaml](../kubernetes/secret.example.yaml)
-- PVC: [kubernetes/persistentvolumeclaim.yaml](../kubernetes/persistentvolumeclaim.yaml)
-- Deployment: [kubernetes/deployment.yaml](../kubernetes/deployment.yaml)
-- Service: [kubernetes/service.yaml](../kubernetes/service.yaml)
-- Ingress: [kubernetes/ingress.yaml](../kubernetes/ingress.yaml)
+- des replicas multiples (frontend/back)
+- les PDB (1 pod minimum disponible)
+- les HPA (autoscaling)
 
-## Pre-requis
+## Prerequis
 
-- Un cluster Kubernetes accessible.
-- `kubectl` configure avec le bon contexte.
-- Un Ingress Controller, par exemple NGINX Ingress.
-- Un registre d'images accessible pour l'image PHP construite depuis le `Dockerfile`.
+- Un cluster Kubernetes fonctionnel
+- Un Ingress Controller (ex: NGINX) si vous utilisez `ingress.yaml`
+- Docker Desktop ou un registre pour l'image applicative
 
-## Image Docker
+## Images
 
-Le manifest de deploiement utilise une image exemple `ghcr.io/your-org/admin2-web:latest`.
+L'application utilise `devops-project-web:latest`. Deux options:
 
-Remplacez cette valeur par votre propre image avant le deploiement.
+- **Docker Desktop**: construisez l'image localement et elle sera disponible dans le cluster.
+- **Cluster distant**: poussez l'image dans un registre et remplacez l'image dans `app-frontend.yaml` et `app-backend.yaml`.
 
-## Configuration
+Build local:
 
-Le `ConfigMap` contient les valeurs non sensibles.
+```bash
+docker build -t devops-project-web:latest .
+```
 
-Le `Secret` doit contenir:
+## Secrets
 
-- `DB_USER`
-- `DB_PASS`
+Copiez `secret.example.yaml` en `secret.yaml` et adaptez les valeurs:
 
-Adaptez aussi:
+```bash
+cp kubernetes/secret.example.yaml kubernetes/secret.yaml
+```
 
-- `DB_HOST`
-- `DB_NAME`
-- `BASE_URL`
+Puis modifiez `kustomization.yaml` pour utiliser `secret.yaml` a la place de l'exemple.
 
-## Deploiement manuel
+## Deploiement
 
 ```bash
 kubectl apply -k kubernetes/
 ```
 
-Le manifest `secret.example.yaml` est inclus dans le Kustomize de base pour fournir un exemple complet. Remplacez ses valeurs avant un usage reel.
-
 ## Acces
 
-Le manifest Ingress expose l'application sur:
+Port-forward (rapide et portable):
 
-- host: `admin2.local`
-- path: `/admin2`
+```bash
+kubectl -n devops-project port-forward svc/devops-project-frontend 8080:80
+kubectl -n devops-project port-forward svc/grafana 3000:3000
+kubectl -n devops-project port-forward svc/prometheus 9090:9090
+kubectl -n devops-project port-forward svc/cadvisor 8081:8080
+kubectl -n devops-project port-forward svc/jenkins 8082:8080
+```
 
-Ajoutez une entree DNS ou `hosts` locale qui pointe `admin2.local` vers votre Ingress Controller.
+Avec Ingress:
 
-## Limites
+- Ajoutez `devops-project.local` dans votre fichier hosts
+- Acces: `http://devops-project.local/devops-project`
 
-- Le PVC fourni est suffisant pour un seul pod. Une vraie haute disponibilite applicative avec plusieurs replicas demande un stockage partage de type ReadWriteMany ou un stockage objet pour les uploads.
-- La base MySQL n'est pas fournie dans le cluster; le deploiement suppose un service MySQL externe ou deja gere.
+## Notes
+
+- `cadvisor` utilise des `hostPath`; certains clusters geres peuvent le bloquer.
+- MySQL en single-replica est suffisant pour un environnement de test; pour la HA, utilisez un service MySQL gere.

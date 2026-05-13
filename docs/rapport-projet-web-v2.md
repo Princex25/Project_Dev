@@ -4,7 +4,7 @@ Date: 14/04/2026
 
 ## 1. Resume
 
-Ce rapport presente l'application de gestion des demandes (employes, validateurs, administrateurs) et les ajouts DevOps realises pour le deploiement gratuit sur Render avec Docker et Jenkins.
+Ce rapport presente l'application de gestion des demandes (employes, validateurs, administrateurs) et les ajouts DevOps realises pour le deploiement avec Docker et Jenkins.
 
 ## 2. Contexte et objectifs
 
@@ -33,7 +33,7 @@ Ce rapport presente l'application de gestion des demandes (employes, validateurs
 - Backend: PHP 7+ (PDO / MySQL)
 - Frontend: Bootstrap 5, HTML/CSS, JS
 - Base de donnees: MySQL
-- Environnements: local (Docker Compose) et production (Render)
+- Environnements: local (Docker Compose) et production
 
 ## 6. Base de donnees (synthetique)
 
@@ -45,22 +45,19 @@ Tables principales:
 
 - Dockerisation de l'application (Dockerfile).
 - Orchestration locale (docker-compose.yml).
-- Pipeline Jenkins (Jenkinsfile) pour build et redeploiement via hook Render.
-- Guide de deploiement Render (docs/guide-deploiement-render.md).
+- Pipeline Jenkins (Jenkinsfile) pour build et deploiment manuel.
 - Variables d'environnement centralisees (DB\_\* et BASE_URL).
 
 ## 8. CI/CD (Jenkins)
 
 - Build d'une image Docker a chaque execution.
-- Redeploiement automatique via Render Deploy Hook.
 - Possibilite d'ajouter des tests a terme.
 
 ## 9. Deploiement et exploitation
 
-- Hebergement web sur Render (Docker).
-- Base MySQL hebergee en externe (Aiven/Railway/PlanetScale).
+- Hebergement web via Docker Compose.
+- Base MySQL pour le stockage des donnees.
 - Import initial des donnees via `database/unified_database.sql`.
-- Logs accessibles via Render.
 
 ## 10. Securite et qualite
 

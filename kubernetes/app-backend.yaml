@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-project-web
+  name: devops-project-backend
   namespace: devops-project
 spec:
   replicas: 2
@@ -13,34 +13,21 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: devops-project-web
+      app: devops-project-backend
   template:
     metadata:
       labels:
-        app: devops-project-web
+        app: devops-project-backend
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: devops-project-web
-                topologyKey: kubernetes.io/hostname
       containers:
-        - name: web
+        - name: backend
           image: devops-project-web:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
+          env:
+            - name: APP_ROLE
+              value: backend
           envFrom:
             - configMapRef:
                 name: devops-project-config
@@ -49,6 +36,13 @@ spec:
           volumeMounts:
             - name: uploads
               mountPath: /app/devops-project/uploads/demandes
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
           readinessProbe:
             httpGet:
               path: /devops-project/php-login/index.php
@@ -66,16 +60,29 @@ spec:
           persistentVolumeClaim:
             claimName: devops-project-uploads
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-project-backend
+  namespace: devops-project
+spec:
+  selector:
+    app: devops-project-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: devops-project-web-hpa
+  name: devops-project-backend-hpa
   namespace: devops-project
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: devops-project-web
+    name: devops-project-backend
   minReplicas: 2
   maxReplicas: 5
   metrics:
@@ -95,10 +102,10 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: devops-project-web-pdb
+  name: devops-project-backend-pdb
   namespace: devops-project
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: devops-project-web
+      app: devops-project-backend

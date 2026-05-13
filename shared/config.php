@@ -15,7 +15,7 @@ function envOrDefault($key, $default = null)
 $dbPortValue = envOrDefault('DB_PORT', '3306');
 $dbPort = (ctype_digit((string) $dbPortValue)) ? (int) $dbPortValue : 3306;
 
-$baseUrlRaw = envOrDefault('BASE_URL', '/admin2');
+$baseUrlRaw = envOrDefault('BASE_URL', '/devops-project');
 $baseUrl = rtrim($baseUrlRaw, '/');
 if ($baseUrlRaw === '/' || $baseUrlRaw === '') {
     $baseUrl = '';
@@ -63,7 +63,7 @@ class Database
                 "<br><br><strong>Assurez-vous que:</strong><br>" .
                 "1. MySQL est démarré<br>" .
                 "2. La base de données 'gestion_demandes' existe<br>" .
-                "3. Importez le fichier SQL: /admin2/database/unified_database.sql");
+                "3. Importez le fichier SQL: /devops-project/database/unified_database.sql");
         }
     }
 

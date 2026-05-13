@@ -49,7 +49,7 @@ Exclus:
 
 ## 7. Contraintes
 
-- Hebergement web gratuit (Render).
+- Hebergement web gratuit .
 - Base MySQL hebergee en externe.
 - Stack imposee: PHP/MySQL/Bootstrap.
 
@@ -63,14 +63,14 @@ Exclus:
 - Code source du projet.
 - Dockerfile + docker-compose.
 - Jenkinsfile + guide Jenkins.
-- Guide de deploiement Render.
+
 - Rapport v2 et presentation.
 
 ## 10. Criteres d'acceptation
 
 - Authentification fonctionnelle.
 - Creation et validation des demandes.
-- Deploiement stable sur Render.
+- Deploiement stable .
 - Pipeline Jenkins fonctionnel (build + deploy hook).
 
 ## 11. Risques

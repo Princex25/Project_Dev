@@ -4,7 +4,10 @@ resources:
   - namespace.yaml
   - configmap.yaml
   - secret.example.yaml
-  - persistentvolumeclaim.yaml
-  - deployment.yaml
-  - service.yaml
+  - uploads-pvc.yaml
+  - mysql.yaml
+  - app-frontend.yaml
+  - app-backend.yaml
   - ingress.yaml
+  - monitoring.yaml
+  - jenkins.yaml

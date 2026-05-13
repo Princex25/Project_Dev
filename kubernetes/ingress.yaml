@@ -1,18 +1,25 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: admin2-web
-  namespace: admin2
+  name: devops-project-web
+  namespace: devops-project
 spec:
   ingressClassName: nginx
   rules:
-    - host: admin2.local
+    - host: devops-project.local
       http:
         paths:
-          - path: /admin2
+          - path: /devops-project/api
             pathType: Prefix
             backend:
               service:
-                name: admin2-web
+                name: devops-project-backend
+                port:
+                  number: 80
+          - path: /devops-project
+            pathType: Prefix
+            backend:
+              service:
+                name: devops-project-frontend
                 port:
                   number: 80

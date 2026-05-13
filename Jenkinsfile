@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        IMAGE_NAME = "admin2-web:${BUILD_NUMBER}"
+        IMAGE_NAME = "devops-project-web:${BUILD_NUMBER}"
     }
 
     stages {
@@ -19,17 +19,6 @@ pipeline {
         stage('Build Docker image') {
             steps {
                 sh 'docker build -t $IMAGE_NAME .'
-            }
-        }
-
-        stage('Deploy to Render') {
-            when {
-                expression {
-                    return env.RENDER_DEPLOY_HOOK_URL && env.RENDER_DEPLOY_HOOK_URL.trim()
-                }
-            }
-            steps {
-                sh 'curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"'
             }
         }
     }

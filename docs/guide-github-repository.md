@@ -10,12 +10,25 @@ Le depot GitHub sert a:
 - declencher GitHub Actions.
 - centraliser la documentation et les guides d'exploitation.
 
+## Definition
+
+**GitHub** est une plateforme de gestion de code source basee sur Git. Elle fournit:
+
+- l'historique des versions.
+- la collaboration (branches, pull requests).
+- l'integration CI/CD via GitHub Actions.
+
+## Techniques utilisees
+
+- **Version control**: suivi des changements et retour en arriere possible.
+- **Branching**: isolation des evolutions (feature branches).
+- **Secrets**: stockage securise des tokens/URL de deploy.
+
 ## Mise en place
 
 1. Creer ou connecter le depot GitHub.
 2. Pousser le contenu du projet dans la branche principale.
 3. Verifier que le workflow [.github/workflows/deploy.yml](../.github/workflows/deploy.yml) est actif.
-4. Ajouter le secret `RENDER_DEPLOY_HOOK_URL` dans les secrets du depot.
 
 ## Bonnes pratiques
 

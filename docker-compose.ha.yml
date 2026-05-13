@@ -7,11 +7,11 @@ services:
       DB_USER: app
       DB_PASS: app
       DB_PORT: 3306
-      BASE_URL: /admin2
+      BASE_URL: /devops-project
     depends_on:
       - db
     volumes:
-      - ./uploads/demandes:/var/www/html/admin2/uploads/demandes
+      - ./uploads/demandes:/var/www/html/devops-project/uploads/demandes
       - php_sessions:/var/lib/php/sessions
 
   web2:
@@ -22,11 +22,11 @@ services:
       DB_USER: app
       DB_PASS: app
       DB_PORT: 3306
-      BASE_URL: /admin2
+      BASE_URL: /devops-project
     depends_on:
       - db
     volumes:
-      - ./uploads/demandes:/var/www/html/admin2/uploads/demandes
+      - ./uploads/demandes:/var/www/html/devops-project/uploads/demandes
       - php_sessions:/var/lib/php/sessions
 
   proxy:

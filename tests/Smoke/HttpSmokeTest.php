@@ -9,7 +9,7 @@ final class HttpSmokeTest extends TestCase
     public function testLoginPageResponds(): void
     {
         $baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost:8080';
-        $url = rtrim($baseUrl, '/') . '/admin2/php-login/index.php';
+        $url = rtrim($baseUrl, '/') . '/devops-project/php-login/index.php';
 
         $context = stream_context_create([
             'http' => [

@@ -3,7 +3,6 @@ version: "3.3"
 services:
   web:
     build: .
-    privileged: true
     ports:
       - "8080:80"
     environment:
@@ -12,17 +11,16 @@ services:
       DB_USER: app
       DB_PASS: app
       DB_PORT: 3306
-      BASE_URL: /admin2
+      BASE_URL: /devops-project
     depends_on:
       - db
     volumes:
-      - ./uploads/demandes:/app/admin2/uploads/demandes
+      - ./uploads/demandes:/app/devops-project/uploads/demandes
 
   db:
     build:
       context: .
       dockerfile: database/Dockerfile
-    privileged: true
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_DATABASE: gestion_demandes

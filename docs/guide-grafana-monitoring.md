@@ -10,6 +10,18 @@ Cette pile permet de suivre:
 - l'utilisation CPU et memoire.
 - les metriques accessibles via Prometheus.
 
+## Definition des outils
+
+- **Prometheus**: collecte et stocke les metriques (scraping HTTP).
+- **Grafana**: visualise les metriques via des dashboards.
+- **cAdvisor**: expose les metriques des conteneurs Docker.
+
+## Techniques utilisees
+
+- **Observabilite**: collecte et visualisation des metriques.
+- **Scraping**: Prometheus interroge cAdvisor a intervalle regulier.
+- **Dashboards**: Grafana consomme Prometheus comme datasource.
+
 ## Lancement
 
 Demarrez l'application et le monitoring ensemble avec les deux fichiers Compose:
@@ -20,7 +32,7 @@ docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up --build
 
 ## Acces
 
-- Application: http://localhost:8080/admin2/php-login/index.php
+- Application: http://localhost:8080/devops-project/php-login/index.php
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000
 - cAdvisor: http://localhost:8081
@@ -48,6 +60,14 @@ Dans Grafana, vous pouvez creer des tableaux de bord pour:
 - la charge globale du systeme de monitoring.
 
 Le service applicatif PHP ne publie pas encore de metriques propres; Grafana sert donc d'abord a visualiser l'infrastructure conteneurisee.
+
+## Explication de la pile
+
+- `docker-compose.monitoring.yml` demarre Prometheus, Grafana et cAdvisor.
+- `monitoring/prometheus/prometheus.yml` definit la cible de scraping.
+- `monitoring/grafana/` configure Grafana avec une datasource Prometheus predefinie.
+
+Role dans le projet: verifier la sante des conteneurs et la charge globale pendant les tests.
 
 ## Limites
 

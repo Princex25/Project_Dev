@@ -17,7 +17,11 @@ docker compose up --build
 
 Accès local:
 
-- http://localhost:8080/admin2/php-login/index.php
+- http://localhost:8080/devops-project/php-login/index.php
+
+## Docker & Docker Compose
+
+- Guide: [docs/guide-docker-compose.md](docs/guide-docker-compose.md)
 
 ## Monitoring Grafana
 
@@ -59,15 +63,32 @@ Les tests d’intégration et smoke nécessitent que les conteneurs soient déma
 
 ## Kubernetes
 
-- Guide: [docs/guide-kubernetes.md](docs/guide-kubernetes.md)
-- Manifests: [kubernetes/kustomization.yaml](kubernetes/kustomization.yaml)
+Ce projet inclut des manifestes Kubernetes pour orchestrer:
 
-## Ansible
+- **Frontend** (2 replicas + HPA + PDB)
+- **Backend** (2 replicas + HPA + PDB)
+- **MySQL** (PVC)
+- **Jenkins** (PVC)
+- **Monitoring** (Prometheus + Grafana)
+- **cAdvisor** (DaemonSet)
 
-- Guide: [docs/guide-ansible.md](docs/guide-ansible.md)
-- Playbook: [ansible/deploy-kubernetes.yml](ansible/deploy-kubernetes.yml)
+Deploiement rapide:
 
-## Mode haute disponibilite
+```bash
+kubectl apply -k kubernetes/
+```
+
+Acces (port-forward):
+
+```bash
+kubectl -n devops-project port-forward svc/devops-project-frontend 8080:80
+kubectl -n devops-project port-forward svc/grafana 3000:3000
+kubectl -n devops-project port-forward svc/prometheus 9090:9090
+kubectl -n devops-project port-forward svc/cadvisor 8081:8080
+kubectl -n devops-project port-forward svc/jenkins 8082:8080
+```
+
+Si vous utilisez l'Ingress, ajoutez `devops-project.local` dans votre fichier hosts et activez un Ingress Controller (ex: NGINX).
 
 Pour lancer deux instances applicatives derriere un reverse proxy Nginx:
 
@@ -77,10 +98,7 @@ docker compose -f docker-compose.ha.yml up --build
 
 Ce mode permet a une instance de reprendre la charge si l'autre tombe, mais la base MySQL reste un point de panne unique.
 
-## Déploiement Render
-
-- Guide: [docs/guide-deploiement-render.md](docs/guide-deploiement-render.md)
-- Blueprint: [render.yaml](render.yaml)
+Pour une haute disponibilite en Kubernetes (replicas, PDB, HPA), voir le guide Kubernetes: [docs/guide-kubernetes.md](docs/guide-kubernetes.md).
 
 ## GitHub Actions
 
@@ -91,11 +109,6 @@ Ce mode permet a une instance de reprendre la charge si l'autre tombe, mais la b
 
 - Guide: [docs/guide-github-repository.md](docs/guide-github-repository.md)
 
-## Déploiement Railway
-
-- Guide: [docs/guide-deploiement-railway.md](docs/guide-deploiement-railway.md)
-- Le projet peut être déployé avec le même `Dockerfile`.
-
 ## Documents
 
 - Cahier des charges: [docs/cahier-des-charges.md](docs/cahier-des-charges.md)
@@ -103,8 +116,10 @@ Ce mode permet a une instance de reprendre la charge si l'autre tombe, mais la b
 - Rapport DevOps: [docs/rapport-devops-outils.md](docs/rapport-devops-outils.md)
 - Guide Grafana: [docs/guide-grafana-monitoring.md](docs/guide-grafana-monitoring.md)
 - Guide Kubernetes: [docs/guide-kubernetes.md](docs/guide-kubernetes.md)
-- Guide Ansible: [docs/guide-ansible.md](docs/guide-ansible.md)
+
 - Guide Depot GitHub: [docs/guide-github-repository.md](docs/guide-github-repository.md)
 - Guide Jenkins: [docs/guide-jenkins.md](docs/guide-jenkins.md)
+- Guide Docker & Compose: [docs/guide-docker-compose.md](docs/guide-docker-compose.md)
+- Guide MySQL HA: [docs/guide-mysql-ha.md](docs/guide-mysql-ha.md)
 
 GitHub Actions est maintenant le chemin d'automatisation principal.

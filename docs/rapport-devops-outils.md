@@ -13,13 +13,13 @@ La chaine DevOps du projet repose sur les composants suivants:
 - Docker pour containeriser l'application.
 - Docker Compose pour lancer un environnement local complet.
 - Grafana, Prometheus et cAdvisor pour le monitoring local.
-- Kubernetes pour une description declarative de l'application en cluster.
-- Ansible pour automatiser le deploiement Kubernetes.
+
+
 - GitHub pour heberger le code source et declencher l'automatisation.
 - GitHub Actions pour la CI/CD principale.
 - Jenkins comme ancienne solution d'automatisation, conservee en reference.
-- Render pour l'hebergement de l'application en production.
-- Railway comme alternative de deploiement possible.
+
+
 - MySQL pour la base de donnees.
 
 L'objectif est de rendre le cycle de livraison simple, reproductible et proche de la production, tout en gardant un deploiement accessible pour un petit projet web PHP.
@@ -57,7 +57,7 @@ Role principal:
 Points forts:
 
 - Image simple et reproductible.
-- Deploiement compatible avec Render et Railway.
+
 - Dependances PHP isolees dans un conteneur.
 
 Limites:
@@ -179,9 +179,7 @@ Limites:
 - Le stockage des uploads exige une attention particuliere si plusieurs replicas sont utilises.
 - Un cluster et un Ingress Controller restent necessaires pour exploiter cette couche.
 
-### 4.2.4 Ansible
 
-Le repertoire `ansible/` automatise le deploiement Kubernetes avec un playbook simple.
 
 Role principal:
 
@@ -198,11 +196,9 @@ Avantages:
 
 - Automatisation lisible et simple.
 - Permet de standardiser le deploiement d'un cluster deja prepare.
-- Facile a etendre avec d'autres roles Ansible.
 
 Limites:
 
-- Ansible ne remplace pas Kubernetes; il orchestre seulement le deploiement.
 - Le playbook suppose que `kubectl` et l'acces au cluster existent deja.
 - Pour une vraie mise en production, il faut souvent completer avec des roles de provisioning ou des secrets managers.
 
@@ -219,7 +215,7 @@ Role principal:
 Bonnes pratiques observees:
 
 - Un workflow principal pour le deploiement.
-- Utilisation de secrets pour le webhook Render.
+
 
 ### 4.4 GitHub Actions
 
@@ -229,7 +225,7 @@ Le workflow `deploy.yml` fait les operations suivantes:
 
 1. Recupere le code source.
 2. Construit l'image Docker.
-3. Declenche le webhook de Render si le secret est defini.
+
 
 Role principal:
 
@@ -254,7 +250,7 @@ Jenkins a ete utilise comme pipeline historique du projet. Le fichier `Jenkinsfi
 
 - checkout du code.
 - build de l'image Docker.
-- appel du webhook Render.
+
 
 Role principal:
 
@@ -276,9 +272,7 @@ Limites:
 - Necessite une instance Jenkins a heberger et administrer.
 - Introduit une couche supplementaire sans benefice majeur ici.
 
-### 4.6 Render
 
-Render est la plateforme de production principale du projet.
 
 Role principal:
 
@@ -286,7 +280,6 @@ Role principal:
 - Gerer les redements automatiques.
 - Fournir une URL publique et des logs.
 
-Le fichier `render.yaml` definit:
 
 - un service web Docker.
 - le chemin de healthcheck.
@@ -303,9 +296,7 @@ Limites:
 - La base MySQL n'est pas fournie en gratuit dans ce contexte.
 - La supervision avancee reste limitee selon le plan.
 
-### 4.7 Railway
 
-Railway est documente comme alternative de deploiement.
 
 Role principal:
 
@@ -366,14 +357,14 @@ La CI verifie principalement que l'image se construit correctement.
 
 ### 5.3 Deploiement continu
 
-Apres la construction de l'image, GitHub Actions envoie une requete au webhook Render.
 
-Render relance alors le service avec la nouvelle image et l'application devient disponible via l'URL publique.
+
+
 
 ### 5.4 Flux simplifie
 
 ```text
-Developpement local -> Push GitHub -> GitHub Actions -> Build Docker -> Webhook Render -> Deploiement
+Developpement local -> Push GitHub -> GitHub Actions -> Build Docker -> Deploiement
 ```
 
 ## 6. Gestion des secrets et variables d'environnement
@@ -388,11 +379,11 @@ Variables principales utilisees:
 - `DB_USER`
 - `DB_PASS`
 - `BASE_URL`
-- `RENDER_DEPLOY_HOOK_URL`
+
 
 Bonnes pratiques:
 
-- Stocker les secrets dans GitHub, Render ou Jenkins selon le contexte.
+- Stocker les secrets dans GitHub ou Jenkins selon le contexte.
 - Ne jamais hardcoder les identifiants de base de donnees.
 - Garder `BASE_URL` coherent entre local et production.
 
@@ -420,7 +411,7 @@ En exploitation, les points essentiels sont:
 - logs de build et de deploiement.
 - disponibilite de la base MySQL.
 - droits d'ecriture sur `uploads/`.
-- verification du healthcheck Render.
+
 
 ### 7.3 Sauvegardes
 
@@ -440,7 +431,7 @@ Etat actuel:
 
 - Validation surtout manuelle.
 - Verification du build Docker.
-- Verification du deploiement Render via webhook.
+
 
 Evolutions recommandees:
 
@@ -455,11 +446,11 @@ Les choix retenus sont adaptes a un projet PHP/MySQL de taille moyenne:
 - Docker apporte la reproductibilite.
 - Docker Compose facilite le local.
 - Grafana et Prometheus ajoutent la visibilite operationnelle.
-- Kubernetes apporte une couche de deploiement declarative.
-- Ansible simplifie l'automatisation de ce deploiement.
+
+
 - GitHub Actions simplifie la CI/CD.
-- Render fournit un hebergement rapide a mettre en place.
-- Railway reste disponible comme alternative.
+
+
 - Jenkins reste documente comme historique.
 
 Cette combinaison limite les couts de maintenance tout en gardant une chaine de livraison claire.
@@ -482,8 +473,8 @@ Cette combinaison limite les couts de maintenance tout en gardant une chaine de 
 4. Ajouter une verification post-deploiement.
 5. Centraliser les secrets et les variables d'environnement dans un tableau de configuration.
 6. Ajouter des metriques applicatives propres pour enrichir les dashboards Grafana.
-7. Ajouter une versioning strategy pour les manifests Kubernetes et les roles Ansible.
+
 
 ## 12. Conclusion
 
-La stack DevOps du projet est volontairement simple et efficace. Docker et Docker Compose assurent un socle reproductible, Grafana avec Prometheus ajoute une couche de supervision locale, GitHub Actions pilote la livraison, et Render heberge l'application de maniere directe. Jenkins reste documente comme historique, mais la voie principale est maintenant GitHub Actions. Le mode haute disponibilite ajoute une redondance applicative utile pour absorber la defaillance d'un conteneur, tout en laissant la base MySQL comme composant a traiter pour une vraie haute disponibilite de bout en bout.
+La stack DevOps du projet est volontairement simple et efficace. Docker et Docker Compose assurent un socle reproductible, Grafana avec Prometheus ajoute une couche de supervision locale, GitHub Actions pilote la livraison, Jenkins reste documente comme historique, mais la voie principale est maintenant GitHub Actions. Le mode haute disponibilite ajoute une redondance applicative utile pour absorber la defaillance d'un conteneur, tout en laissant la base MySQL comme composant a traiter pour une vraie haute disponibilite de bout en bout.
