@@ -1,11 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-project-web
+  name: devops-project
   namespace: devops-project
+  labels:
+    app: devops-project
 spec:
-  replicas: 2
-  revisionHistoryLimit: 2
+  replicas: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -13,11 +14,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: devops-project-web
+      app: devops-project
   template:
     metadata:
       labels:
-        app: devops-project-web
+        app: devops-project
     spec:
       affinity:
         podAntiAffinity:
@@ -25,22 +26,18 @@ spec:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
-                  matchLabels:
-                    app: devops-project-web
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - devops-project
                 topologyKey: kubernetes.io/hostname
       containers:
-        - name: web
+        - name: app
           image: devops-project-web:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
           envFrom:
             - configMapRef:
                 name: devops-project-config
@@ -48,7 +45,16 @@ spec:
                 name: devops-project-secret
           volumeMounts:
             - name: uploads
-              mountPath: /app/devops-project/uploads/demandes
+              mountPath: /app/devops-project/uploads
+            - name: shared-config
+              mountPath: /app/devops-project/shared
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
           readinessProbe:
             httpGet:
               path: /devops-project/php-login/index.php
@@ -64,41 +70,23 @@ spec:
       volumes:
         - name: uploads
           persistentVolumeClaim:
-            claimName: devops-project-uploads
+            claimName: devops-project-efs
+        - name: shared-config
+          emptyDir: {}
 ---
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+apiVersion: v1
+kind: Service
 metadata:
-  name: devops-project-web-hpa
+  name: devops-project
   namespace: devops-project
+  labels:
+    app: devops-project
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: devops-project-web
-  minReplicas: 2
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: devops-project-web-pdb
-  namespace: devops-project
-spec:
-  minAvailable: 1
+  type: ClusterIP
   selector:
-    matchLabels:
-      app: devops-project-web
+    app: devops-project
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

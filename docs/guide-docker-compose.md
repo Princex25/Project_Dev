@@ -70,3 +70,4 @@ docker compose -f docker-compose.ha.yml up --build
 - La base MySQL reste un point de panne unique en local.
 - Le partage des uploads en local passe par un volume commun.
 - En production, la haute disponibilite doit aussi couvrir la base de donnees et le stockage.
+- Remplacer docker compose par kubernety et suprimer toutes les file de docker compose

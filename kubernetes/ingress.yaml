@@ -1,25 +1,25 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: devops-project-web
+  name: devops-project-ingress
   namespace: devops-project
+  annotations:
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/healthcheck-path: "/devops-project/php-login/index.php"
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-threshold-count: "3"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
 spec:
-  ingressClassName: nginx
   rules:
-    - host: devops-project.local
-      http:
+    - http:
         paths:
-          - path: /devops-project/api
-            pathType: Prefix
-            backend:
-              service:
-                name: devops-project-backend
-                port:
-                  number: 80
           - path: /devops-project
             pathType: Prefix
             backend:
               service:
-                name: devops-project-frontend
+                name: devops-project
                 port:
                   number: 80

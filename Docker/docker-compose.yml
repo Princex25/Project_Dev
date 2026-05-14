@@ -1,5 +1,8 @@
 version: "3.3"
 
+# Docker Compose — Développement local uniquement
+# Pour la production, utiliser Kubernetes/EKS (voir kubernetes/)
+
 services:
   web:
     build: .
@@ -16,6 +19,7 @@ services:
       - db
     volumes:
       - ./uploads/demandes:/app/devops-project/uploads/demandes
+      - ./shared/config.php:/app/devops-project/shared/config.php
 
   db:
     build:
