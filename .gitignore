@@ -1,0 +1,58 @@
+# ============================================================
+# .gitignore — Fichiers à ne PAS versionner
+# ============================================================
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!terraform.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Fichiers sensibles
+*.pem
+*.key
+terraform/terraform.tfvars
+
+# Docker
+docker-compose.override.yml
+
+# Kubernetes - secrets et données sensibles
+kubernetes/secret.yaml
+!kubernetes/secret.example.yaml
+
+# Node (si frontend JS)
+node_modules/
+npm-debug.log*
+
+# PHP
+vendor/
+composer.phar
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+Thumbs.db
+
+# Git
+.git/
+
+# Logs
+*.log
+logs/
+
+# Tests / coverage
+html-coverage/
+.coverage
+
+# Uploads (données utilisateurs)
+uploads/
+!uploads/.gitkeep

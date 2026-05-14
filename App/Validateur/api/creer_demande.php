@@ -10,13 +10,14 @@ $types = getTypesdemandes();
 $message = '';
 $error = '';
 
-function traiterFormulaire($pdo, $userId, $userName) {
+function traiterFormulaire($pdo, $userId, $userName)
+{
     global $error;
-    
+
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         return false;
     }
-    
+
     $type_id = intval($_POST['type_demande']);
     $urgence = $_POST['urgence'];
     $description = trim($_POST['description']);
@@ -36,7 +37,7 @@ function traiterFormulaire($pdo, $userId, $userName) {
         }
         $fileName = time() . '_' . basename($_FILES['fichier']['name']);
         $uploadFile = $uploadDir . $fileName;
-        
+
         if (move_uploaded_file($_FILES['fichier']['tmp_name'], $uploadFile)) {
             $fichier = 'uploads/demandes/' . $fileName;
         }
@@ -46,7 +47,7 @@ function traiterFormulaire($pdo, $userId, $userName) {
         INSERT INTO demandes (demandeur_id, type_id, priorite, description, justification, fichier_joint, budget_estime, statut)
         VALUES (?, ?, ?, ?, ?, ?, ?, 'En attente')
     ");
-    
+
     $result = $stmt->execute([
         $userId,
         $type_id,
@@ -56,7 +57,7 @@ function traiterFormulaire($pdo, $userId, $userName) {
         $fichier,
         $budget
     ]);
-    
+
     if ($result) {
 
         $demandeId = $pdo->lastInsertId();
@@ -66,7 +67,7 @@ function traiterFormulaire($pdo, $userId, $userName) {
             FROM users WHERE role = 'Validateur' LIMIT 1
         ");
         $stmt->execute([$demandeId, $userName, $description]);
-        
+
         header('Location: index.php?success=1');
         exit();
     } else {
@@ -76,4 +77,3 @@ function traiterFormulaire($pdo, $userId, $userName) {
 }
 
 traiterFormulaire($pdo, $_SESSION['user_id'], $user['nom_complet'] ?? 'Utilisateur');
-?>

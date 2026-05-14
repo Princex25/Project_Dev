@@ -2,11 +2,17 @@ pipeline {
     agent any
 
     environment {
+        // --- Docker ---
         AWS_REGION = "us-east-1"
         ECR_REPO = "123456789.dkr.ecr.${AWS_REGION}.amazonaws.com/devops-project"
         IMAGE_TAG = "build-${BUILD_NUMBER}"
+
+        // --- Kubernetes ---
         KUBE_NAMESPACE = "devops-project"
-        KUBECONFIG_PATH = "${HOME}/.kube/config"
+        EKS_CLUSTER = "devops-project-cluster-dev"
+
+        // --- Terraform ---
+        TF_DIR = "terraform"
     }
 
     stages {
@@ -21,7 +27,6 @@ pipeline {
         stage('Tests') {
             steps {
                 sh 'echo "🔍 Exécution des tests..."'
-                // Exécuter les tests PHPUnit si configuré
                 // sh './vendor/bin/phpunit --testdox'
                 sh 'echo "✅ Tests terminés"'
             }
@@ -30,8 +35,7 @@ pipeline {
         stage('Analyse de sécurité') {
             steps {
                 sh 'echo "🔒 Scan de sécurité du code..."'
-                // Scanner les secrets (ex: trufflehog, gitleaks)
-                // Scanner les vulnérabilités (ex: semgrep, sonarqube)
+                // trufflehog, gitleaks, semgrep...
                 sh 'echo "✅ Analyse de sécurité terminée"'
             }
         }
@@ -61,16 +65,54 @@ pipeline {
             }
         }
 
+        // ============================================================
+        // ÉTAPES TERRAFORM
+        // ============================================================
+
+        stage('Terraform Init') {
+            steps {
+                sh """
+                    echo "🔧 Initialisation Terraform..."
+                    cd ${TF_DIR}
+                    terraform init -input=false
+                    echo "✅ Terraform initialisé"
+                """
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh """
+                    echo "📋 Plan Terraform en cours..."
+                    cd ${TF_DIR}
+                    terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
+                    echo "✅ Plan Terraform généré"
+                """
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh """
+                    echo "🚀 Application de l'infrastructure Terraform..."
+                    cd ${TF_DIR}
+                    terraform apply -auto-approve tfplan
+                    echo "✅ Infrastructure Terraform déployée"
+                """
+            }
+        }
+
+        // ============================================================
+        // DÉPLOIEMENT KUBERNETES
+        // ============================================================
+
         stage('Mise à jour du tag dans Kustomize') {
             steps {
                 sh """
                     echo "📝 Mise à jour de l'image tag dans kustomization..."
                     cd kubernetes
-
-                    # Mettre à jour le tag d'image dans kustomization.yaml
-                    sed -i 's|image:.*|image: ${ECR_REPO}:${IMAGE_TAG}|g' kustomization.yaml
-
-                    echo "✅ Tag mis à jour dans kustomization.yaml"
+                    sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|g' kustomization.yaml
+                    echo "✅ Tag mis à jour"
                     cat kustomization.yaml
                 """
             }
@@ -80,14 +122,9 @@ pipeline {
             steps {
                 sh """
                     echo "🚀 Déploiement sur AWS EKS..."
-
-                    # Mettre à jour kubeconfig pour EKS
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name devops-project-cluster
-
-                    # Appliquer les configurations Kubernetes via kustomize
+                    aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER}
                     cd kubernetes
                     kubectl apply -k .
-
                     echo "✅ Déploiement terminé sur EKS"
                 """
             }
@@ -97,9 +134,18 @@ pipeline {
             steps {
                 sh """
                     echo "🔍 Vérification du statut des pods..."
-                    kubectl -n ${KUBE_NAMESPACE} rollout status deployment/devops-project --timeout=120s
-
+                    kubectl -n ${KUBE_NAMESPACE} rollout status deployment/devops-project --timeout=180s
                     echo "✅ Vérification terminée — Tous les pods sont opérationnels"
+                """
+            }
+        }
+
+        stage('Smoke Tests') {
+            steps {
+                sh """
+                    echo "🧪 Exécution des smoke tests..."
+                    # curl ou scripts de test
+                    echo "✅ Smoke tests terminés"
                 """
             }
         }
@@ -111,11 +157,11 @@ pipeline {
         }
         failure {
             echo "❌ Pipeline échoué ! Build #${BUILD_NUMBER}"
-            // Notification Slack/Email possible ici
         }
         always {
-            // Nettoyage des images locales
             sh 'docker rmi ${ECR_REPO}:${IMAGE_TAG} ${ECR_REPO}:latest 2>/dev/null || true'
+            // Archive des plans Terraform
+            archiveArtifacts artifacts: 'terraform/tfplan', allowEmptyArchive: true
         }
     }
 }

@@ -1,0 +1,41 @@
+# ============================================================
+# Exemple de configuration Terraform
+# Copier ce fichier en terraform.tfvars et modifier les valeurs
+# ============================================================
+
+# --- Général ---
+aws_region    = "us-east-1"
+environment   = "dev"
+project_name  = "devops-project"
+
+# --- VPC ---
+vpc_cidr           = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24", "10.0.30.0/24"]
+
+# --- EKS ---
+eks_cluster_version    = "1.30"
+eks_node_instance_type = "t3.medium"
+eks_node_min_size      = 3
+eks_node_max_size      = 6
+eks_node_desired_size  = 3
+
+# --- RDS MySQL ---
+rds_instance_class    = "db.t3.medium"
+rds_allocated_storage = 20
+rds_multi_az          = true
+
+# --- EFS ---
+efs_throughput_mode = "elastic"
+
+# --- Domaine & SSL ---
+domain_name        = "devops-projet.fr"
+acm_certificate_arn = "arn:aws:acm:us-east-1:123456789:certificate/xxxx-xxxx-xxxx-xxxx"
+
+# --- Tags ---
+common_tags = {
+  Project     = "devops-project"
+  Environment = "dev"
+  ManagedBy   = "terraform"
+  Team        = "devops"
+}

@@ -3,6 +3,12 @@ kind: Kustomization
 
 namespace: devops-project
 
+# Image mise à jour automatiquement par Jenkins (sed)
+# Jenkins exécute : sed -i 's|image: devops-project-web:.*|image: ${ECR_REPO}:${IMAGE_TAG}|g' kustomization.yaml
+images:
+  - name: devops-project-web
+    newTag: latest
+
 resources:
   - namespace.yaml
   - configmap.yaml
@@ -12,3 +18,7 @@ resources:
   - ingress.yaml
   - hpa.yaml
   - pdb.yaml
+
+commonLabels:
+  app: devops-project
+  managed-by: terraform
