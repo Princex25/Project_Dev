@@ -22,7 +22,7 @@ Objectifs dans ce projet:
 
 ## Dockerfile (application)
 
-Le fichier [Dockerfile](../Dockerfile) :
+Le fichier [Dockerfile](../Docker/Dockerfile) :
 
 - utilise `webdevops/php-apache:8.2` comme base.
 - configure la racine web via `WEB_DOCUMENT_ROOT`.
@@ -34,7 +34,7 @@ Role dans le projet: fournir une image applicative unique reutilisable (local, K
 
 ## Docker Compose (mode standard)
 
-Le fichier [docker-compose.yml](../docker-compose.yml) demarre:
+Le fichier [docker-compose.yml](../Docker/docker-compose.yml) demarre:
 
 - **web**: le conteneur PHP/Apache.
 - **db**: MySQL avec un volume `db_data`.
@@ -43,7 +43,7 @@ Il expose l'application sur `http://localhost:8080/devops-project/php-login/inde
 
 ## Docker Compose (mode haute disponibilite)
 
-Le fichier [docker-compose.ha.yml](../docker-compose.ha.yml) demarre:
+Le fichier [docker-compose.ha.yml](../Docker/docker-compose.ha.yml) demarre:
 
 - **web1** et **web2**: deux conteneurs web identiques.
 - **proxy**: Nginx qui fait l'equilibrage de charge.

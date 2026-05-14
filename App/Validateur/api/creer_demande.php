@@ -30,7 +30,7 @@ function traiterFormulaire($pdo, $userId, $userName) {
 
     $fichier = null;
     if (isset($_FILES['fichier']) && $_FILES['fichier']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../uploads/';
+        $uploadDir = __DIR__ . '/../../uploads/demandes/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
@@ -38,7 +38,7 @@ function traiterFormulaire($pdo, $userId, $userName) {
         $uploadFile = $uploadDir . $fileName;
         
         if (move_uploaded_file($_FILES['fichier']['tmp_name'], $uploadFile)) {
-            $fichier = 'uploads/' . $fileName;
+            $fichier = 'uploads/demandes/' . $fileName;
         }
     }
 

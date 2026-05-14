@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$demandeId, $_SESSION['user_id']]);
 
                 if (isset($_FILES['pieces_jointes']) && !empty($_FILES['pieces_jointes']['name'][0])) {
-                    $uploadDir = '../uploads/demandes/' . $demandeId . '/';
+                    $uploadDir = '../../uploads/demandes/' . $demandeId . '/';
                     
                     if (!is_dir($uploadDir)) {
                         mkdir($uploadDir, 0755, true);

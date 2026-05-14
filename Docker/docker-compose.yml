@@ -18,13 +18,13 @@ services:
     depends_on:
       - db
     volumes:
-      - ./uploads/demandes:/app/devops-project/uploads/demandes
-      - ./shared/config.php:/app/devops-project/shared/config.php
+      - ./App/uploads/demandes:/app/devops-project/uploads/demandes
+      - ./App/shared/config.php:/app/devops-project/shared/config.php
 
   db:
     build:
       context: .
-      dockerfile: database/Dockerfile
+      dockerfile: App/admin/database/Dockerfile
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_DATABASE: gestion_demandes

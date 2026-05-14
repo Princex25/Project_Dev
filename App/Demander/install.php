@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
 
-        $sqlFile = __DIR__ . '/database/demander.sql';
+        $sqlFile = __DIR__ . '/../admin/database/unified_database.sql';
 
         if (file_exists($sqlFile)) {
             $sql = file_get_contents($sqlFile);
