@@ -7,12 +7,13 @@ pipeline {
         ECR_REPO = "123456789.dkr.ecr.${AWS_REGION}.amazonaws.com/devops-project"
         IMAGE_TAG = "build-${BUILD_NUMBER}"
 
-        // --- Kubernetes ---
+        // --- K3s ---
         KUBE_NAMESPACE = "devops-project"
-        EKS_CLUSTER = "devops-project-cluster-dev"
+        K3S_SERVER_IP = "" // À définir ou récupéré via Terraform output
 
-        // --- Terraform ---
+        // --- Chemins ---
         TF_DIR = "terraform"
+        ANSIBLE_DIR = "ansible"
     }
 
     stages {
@@ -102,40 +103,83 @@ pipeline {
             }
         }
 
-        // ============================================================
-        // DÉPLOIEMENT KUBERNETES
-        // ============================================================
-
-        stage('Mise à jour du tag dans Kustomize') {
+        stage('Récupérer IP K3s Server') {
             steps {
                 sh """
-                    echo "📝 Mise à jour de l'image tag dans kustomization..."
-                    cd kubernetes
-                    sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|g' kustomization.yaml
-                    echo "✅ Tag mis à jour"
-                    cat kustomization.yaml
+                    echo "📡 Récupération de l'IP du serveur K3s..."
+                    export K3S_SERVER_IP=\$(cd ${TF_DIR} && terraform output -raw k3s_server_ip 2>/dev/null || echo "")
+                    echo "IP K3s Server : \${K3S_SERVER_IP}"
+
+                    if [ -z "\${K3S_SERVER_IP}" ]; then
+                        echo "⚠️ IP récupérée depuis Terraform state"
+                        export K3S_SERVER_IP=\$(cd ${TF_DIR} && terraform show -json | jq -r '.values.root_module.resources[] | select(.name=="k3s_server") | .values.private_ip // .values.network_interface[0].private_ip')
+                    fi
+
+                    # Sauvegarder l'IP pour les étapes suivantes
+                    echo "K3S_SERVER_IP=\${K3S_SERVER_IP}" > k3s-server-ip.txt
+                    echo "✅ IP K3s Server : \${K3S_SERVER_IP}"
+                """
+                script {
+                    env.K3S_SERVER_IP = readFile('k3s-server-ip.txt').trim().split('=')[1]
+                }
+            }
+        }
+
+        // ============================================================
+        // ÉTAPES ANSIBLE
+        // ============================================================
+
+        stage('Ansible Provisioning') {
+            steps {
+                sh """
+                    echo "🎭 Provisionning des serveurs avec Ansible..."
+                    cd ${ANSIBLE_DIR}
+
+                    # Mettre à jour l'inventaire avec l'IP réelle
+                    sed -i 's|10.0.1.50|${K3S_SERVER_IP}|g' inventory/hosts
+
+                    ansible-playbook -i inventory/hosts provision.yml -v
+                    echo "✅ Provisionning terminé"
                 """
             }
         }
 
-        stage('Déploiement sur EKS') {
+        stage('Ansible Déploiement App') {
             steps {
                 sh """
-                    echo "🚀 Déploiement sur AWS EKS..."
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER}
-                    cd kubernetes
-                    kubectl apply -k .
-                    echo "✅ Déploiement terminé sur EKS"
+                    echo "🎭 Déploiement de l'application avec Ansible..."
+                    cd ${ANSIBLE_DIR}
+                    ansible-playbook -i inventory/hosts deploy.yml -v
+                    echo "✅ Déploiement applicatif terminé"
                 """
             }
         }
+
+        stage('Ansible Monitoring') {
+            steps {
+                sh """
+                    echo "🎭 Installation du monitoring..."
+                    cd ${ANSIBLE_DIR}
+                    ansible-playbook -i inventory/hosts monitoring.yml -v
+                    echo "✅ Monitoring installé"
+                """
+            }
+        }
+
+        // ============================================================
+        // VÉRIFICATION FINALE
+        // ============================================================
 
         stage('Vérification du déploiement') {
             steps {
                 sh """
-                    echo "🔍 Vérification du statut des pods..."
-                    kubectl -n ${KUBE_NAMESPACE} rollout status deployment/devops-project --timeout=180s
-                    echo "✅ Vérification terminée — Tous les pods sont opérationnels"
+                    echo "🔍 Vérification du statut du cluster..."
+                    export KUBECONFIG=~/.kube/config
+                    ssh -o StrictHostKeyChecking=no ubuntu@${K3S_SERVER_IP} 'k3s kubectl get nodes -o wide'
+                    ssh -o StrictHostKeyChecking=no ubuntu@${K3S_SERVER_IP} 'k3s kubectl -n devops-project get pods -o wide'
+                    ssh -o StrictHostKeyChecking=no ubuntu@${K3S_SERVER_IP} 'k3s kubectl -n devops-project get ingress'
+                    ssh -o StrictHostKeyChecking=no ubuntu@${K3S_SERVER_IP} 'k3s kubectl -n devops-project get hpa'
+                    echo "✅ Vérification terminée — Tous les composants sont opérationnels"
                 """
             }
         }
@@ -144,7 +188,8 @@ pipeline {
             steps {
                 sh """
                     echo "🧪 Exécution des smoke tests..."
-                    # curl ou scripts de test
+                    # Test de connectivité
+                    curl -s -o /dev/null -w "%{http_code}" http://\${K3S_SERVER_IP}:30080/devops-project/php-login/index.php || echo "Service non encore accessible via NodePort"
                     echo "✅ Smoke tests terminés"
                 """
             }

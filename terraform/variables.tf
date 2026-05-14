@@ -45,35 +45,41 @@ variable "private_subnet_cidrs" {
   default     = ["10.0.10.0/24", "10.0.20.0/24", "10.0.30.0/24"]
 }
 
-# --- EKS ---
-variable "eks_cluster_version" {
-  description = "Version de Kubernetes"
+# --- K3s ---
+variable "k3s_version" {
+  description = "Version de K3s"
   type        = string
-  default     = "1.30"
+  default     = "v1.30.4+k3s1"
 }
 
-variable "eks_node_min_size" {
-  description = "Nombre minimum de nœuds"
+variable "k3s_server_instance_type" {
+  description = "Type d'instance pour le serveur K3s"
+  type        = string
+  default     = "t3.medium"
+}
+
+variable "k3s_agent_instance_type" {
+  description = "Type d'instance pour les agents K3s"
+  type        = string
+  default     = "t3.medium"
+}
+
+variable "k3s_agent_min_size" {
+  description = "Nombre minimum d'agents"
   type        = number
   default     = 3
 }
 
-variable "eks_node_max_size" {
-  description = "Nombre maximum de nœuds"
+variable "k3s_agent_max_size" {
+  description = "Nombre maximum d'agents"
   type        = number
   default     = 6
 }
 
-variable "eks_node_desired_size" {
-  description = "Nombre souhaité de nœuds"
+variable "k3s_agent_desired_size" {
+  description = "Nombre souhaité d'agents"
   type        = number
   default     = 3
-}
-
-variable "eks_instance_type" {
-  description = "Type d'instance EC2 pour les nœuds"
-  type        = string
-  default     = "t3.medium"
 }
 
 # --- RDS ---

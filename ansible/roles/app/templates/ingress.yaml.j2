@@ -1,40 +1,46 @@
-# ============================================================
-# Ingress K3s (Traefik natif — pas besoin d'ALB Controller)
-# ============================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: devops-project-ingress
   namespace: devops-project
   annotations:
-    # Traefik est le ingress controller par défaut dans K3s
+    {% if domain_name is defined and domain_name %}
+    kubernetes.io/ingress.class: "traefik"
     traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
     traefik.ingress.kubernetes.io/redirectscheme.scheme: https
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect@file
+    {% else %}
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    {% endif %}
 spec:
-  ingressClassName: traefik
+  {% if domain_name is defined and domain_name and acm_certificate_arn is defined and acm_certificate_arn %}
   tls:
     - hosts:
-        - devops-projet.fr
+        - "{{ domain_name }}"
       secretName: devops-project-tls
+  {% endif %}
   rules:
-    - host: devops-projet.fr
+    {% if domain_name is defined and domain_name %}
+    - host: "{{ domain_name }}"
       http:
         paths:
-          - path: /devops-project
+          - path: {{ base_url }}
             pathType: Prefix
             backend:
               service:
                 name: devops-project
                 port:
                   number: 80
-    # Fallback si pas de domaine (HTTP uniquement)
+    {% else %}
     - http:
         paths:
-          - path: /devops-project
+          - path: {{ base_url }}
             pathType: Prefix
             backend:
               service:
                 name: devops-project
                 port:
                   number: 80
+    {% endif %}

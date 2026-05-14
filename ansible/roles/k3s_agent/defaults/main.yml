@@ -1,0 +1,4 @@
+---
+# Defaults pour K3s Agent
+k3s_version: v1.30.4+k3s1
+k3s_token: "CHANGE_ME_SECRET_TOKEN"

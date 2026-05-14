@@ -1,0 +1,10 @@
+---
+# ============================================================
+# Handlers — Rôle app
+# ============================================================
+
+- name: restart php-apache
+  docker_container:
+    name: devops-project
+    state: restarted
+    restart: yes

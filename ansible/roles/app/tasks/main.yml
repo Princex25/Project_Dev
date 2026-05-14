@@ -1,0 +1,87 @@
+---
+# ============================================================
+# Rôle : app — Déploiement de l'application PHP
+# ============================================================
+
+- name: "App | Création des répertoires de l'application"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - /opt/app/devops-project/uploads
+    - /opt/app/devops-project/shared
+    - /opt/app/config
+
+- name: "App | Copie du code source de l'application"
+  synchronize:
+    src: "{{ playbook_dir }}/../App/"
+    dest: /opt/app/devops-project/
+    recursive: yes
+    delete: yes
+  delegate_to: localhost
+
+- name: "App | Configuration de la base de données — config.php"
+  template:
+    src: config.php.j2
+    dest: /opt/app/devops-project/shared/config.php
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  notify: restart php-apache
+
+- name: "App | Configuration de la connexion PHP Login"
+  template:
+    src: config.php.j2
+    dest: /opt/app/devops-project/php-login/config.php
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: "App | Déploiement des manifests Kubernetes"
+  template:
+    src: "{{ item.src }}"
+    dest: "/opt/app/k8s/{{ item.dest }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  loop:
+    - { src: namespace.yaml.j2, dest: namespace.yaml }
+    - { src: configmap.yaml.j2, dest: configmap.yaml }
+    - { src: secret.yaml.j2, dest: secret.yaml }
+    - { src: efs-storage.yaml.j2, dest: efs-storage.yaml }
+    - { src: deployment.yaml.j2, dest: deployment.yaml }
+    - { src: ingress.yaml.j2, dest: ingress.yaml }
+    - { src: hpa.yaml.j2, dest: hpa.yaml }
+    - { src: pdb.yaml.j2, dest: pdb.yaml }
+
+- name: "App | Application des manifests Kubernetes"
+  shell: |
+    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    cd /opt/app/k8s
+    k3s kubectl apply -f namespace.yaml
+    k3s kubectl apply -f configmap.yaml
+    k3s kubectl create secret generic devops-project-secret \
+      --from-literal=DB_USER={{ db_user }} \
+      --from-literal=DB_PASS={{ db_password }} \
+      --from-literal=DB_ROOT_PASSWORD={{ db_root_password | default('root') }} \
+      --namespace devops-project \
+      --dry-run=client -o yaml | k3s kubectl apply -f -
+    k3s kubectl apply -f efs-storage.yaml
+    k3s kubectl apply -f deployment.yaml
+    k3s kubectl apply -f ingress.yaml
+    k3s kubectl apply -f hpa.yaml
+    k3s kubectl apply -f pdb.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: "App | Vérifier le déploiement"
+  shell: |
+    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    k3s kubectl -n devops-project rollout status deployment/devops-project --timeout=180s
+  register: rollout_status
+  until: rollout_status.rc == 0
+  retries: 10
+  delay: 15

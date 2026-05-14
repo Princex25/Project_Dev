@@ -1,0 +1,48 @@
+# ============================================================
+# Playbook de Déploiement — Application uniquement
+# ============================================================
+# Usage : ansible-playbook -i inventory/hosts deploy.yml
+#
+# Ce playbook déploie uniquement l'application
+# (à utiliser après provisioning.yml)
+# ============================================================
+
+- name: "=== Déploiement de l'application ==="
+  hosts: k3s_servers
+  become: yes
+  roles:
+    - app
+
+- name: "=== Vérification du déploiement ==="
+  hosts: k3s_servers
+  become: yes
+  tasks:
+    - name: "Vérifier les pods"
+      shell: |
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        k3s kubectl -n devops-project get pods -o wide
+      register: pod_status
+
+    - name: "Afficher les pods"
+      debug:
+        msg: "{{ pod_status.stdout_lines }}"
+
+    - name: "Vérifier l'Ingress"
+      shell: |
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        k3s kubectl -n devops-project get ingress
+      register: ingress_status
+
+    - name: "Afficher l'Ingress"
+      debug:
+        msg: "{{ ingress_status.stdout_lines }}"
+
+    - name: "Vérifier le HPA"
+      shell: |
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        k3s kubectl -n devops-project get hpa
+      register: hpa_status
+
+    - name: "Afficher le HPA"
+      debug:
+        msg: "{{ hpa_status.stdout_lines }}"

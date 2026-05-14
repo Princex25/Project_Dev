@@ -1,0 +1,15 @@
+---
+# Defaults pour le rôle App
+app_name: devops-project
+app_port: 80
+app_replicas: 3
+
+# Base de données
+db_host: "10.0.10.100"
+db_port: 3306
+db_name: gestion_demandes
+db_user: app
+db_password: "CHANGE_ME_DB_PASSWORD"
+
+# Application
+base_url: /devops-project

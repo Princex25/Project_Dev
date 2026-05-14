@@ -1,0 +1,65 @@
+# ============================================================
+# Playbook Principal — Configuration complète du cluster
+# ============================================================
+# Usage : ansible-playbook -i inventory/hosts site.yml
+#
+# Ce playbook configure tout :
+#   1. Configuration de base de tous les nœuds
+#   2. Installation du serveur K3s
+#   3. Installation des agents K3s
+#   4. Déploiement de l'application
+#   5. Installation du monitoring
+# ============================================================
+
+- name: "=== Phase 1 : Configuration de base ==="
+  hosts: k3s_cluster
+  become: yes
+  roles:
+    - common
+
+- name: "=== Phase 2 : Installation du serveur K3s ==="
+  hosts: k3s_servers
+  become: yes
+  roles:
+    - k3s_server
+
+- name: "=== Phase 3 : Installation des agents K3s ==="
+  hosts: k3s_agents
+  become: yes
+  roles:
+    - k3s_agent
+
+- name: "=== Phase 4 : Attente de la stabilité du cluster ==="
+  hosts: k3s_servers
+  become: yes
+  tasks:
+    - name: "Attendre que tous les nœuds soient prêts"
+      shell: |
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        k3s kubectl wait --for=condition=Ready nodes --all --timeout=120s
+      register: nodes_ready
+      until: nodes_ready.rc == 0
+      retries: 10
+      delay: 10
+
+    - name: "Afficher le statut des nœuds"
+      shell: |
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        k3s kubectl get nodes -o wide
+      register: node_status
+
+    - name: "Afficher les informations du cluster"
+      debug:
+        msg: "{{ node_status.stdout_lines }}"
+
+- name: "=== Phase 5 : Déploiement de l'application ==="
+  hosts: k3s_servers
+  become: yes
+  roles:
+    - app
+
+- name: "=== Phase 6 : Installation du monitoring ==="
+  hosts: k3s_servers
+  become: yes
+  roles:
+    - monitoring

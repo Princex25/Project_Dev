@@ -1,0 +1,94 @@
+---
+# ============================================================
+# Rôle : common — Configuration de base du système
+# ============================================================
+
+- name: "Common | Mise à jour système"
+  yum:
+    name: "*"
+    state: latest
+  when: ansible_os_family == "RedHat"
+
+- name: "Common | Installation des paquets de base"
+  yum:
+    name:
+      - curl
+      - wget
+      - git
+      - unzip
+      - vim
+      - htop
+      - net-tools
+      - iputils
+      - jq
+      - bash-completion
+      - chrony
+    state: present
+
+- name: "Common | Configuration du timezone"
+  timezone:
+    name: "{{ timezone | default('Europe/Paris') }}"
+
+- name: "Common | Configuration NTP (chrony)"
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+  notify: restart chronyd
+
+- name: "Common | Désactiver SELinux (nécessaire pour K3s)"
+  selinux:
+    state: disabled
+  when: ansible_os_family == "RedHat"
+  register: selinux_result
+
+- name: "Common | Reboot si SELinux désactivé"
+  reboot:
+    reboot_timeout: 300
+  when:
+    - ansible_os_family == "RedHat"
+    - selinux_result.changed
+
+- name: "Common | Ajout du dépôt Docker"
+  yum_repository:
+    name: docker
+    description: Docker CE Repository
+    baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+    gpgcheck: yes
+    gpgkey: https://download.docker.com/linux/centos/gpg
+    enabled: yes
+
+- name: "Common | Installation Docker"
+  yum:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  notify: restart docker
+
+- name: "Common | Démarrage Docker au boot"
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: "Common | Ajout de l'utilisateur ubuntu au groupe docker"
+  user:
+    name: ubuntu
+    groups: docker
+    append: yes
+
+- name: "Common | Création des répertoires de l'application"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - /opt/app/uploads
+    - /opt/app/shared
+    - /opt/monitoring
+    - /opt/k3s-config

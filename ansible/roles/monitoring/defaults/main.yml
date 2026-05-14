@@ -1,0 +1,5 @@
+---
+# Defaults pour le rôle Monitoring
+prometheus_version: "v2.54.1"
+grafana_version: "11.2.0"
+monitoring_namespace: monitoring

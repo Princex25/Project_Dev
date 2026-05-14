@@ -1,0 +1,83 @@
+---
+# ============================================================
+# Rôle : k3s_server — Installation et configuration du serveur K3s
+# ============================================================
+
+- name: "K3s Server | Installation des dépendances"
+  yum:
+    name:
+      - conntrack
+      - socat
+      - ebtables
+      - ipset
+      - iptables
+      - nfs-utils
+    state: present
+
+- name: "K3s Server | Téléchargement du script d'installation K3s"
+  get_url:
+    url: "https://get.k3s.io"
+    dest: /tmp/k3s-install.sh
+    mode: '0755'
+
+- name: "K3s Server | Installation de K3s"
+  shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -s - server \
+      --cluster-init \
+      --token {{ k3s_token }} \
+      --cluster-cidr 10.42.0.0/16 \
+      --service-cidr 10.43.0.0/16 \
+      --disable traefik \
+      --node-ip {{ ansible_default_ipv4.address }} \
+      --tls-san {{ ansible_default_ipv4.address }} \
+      --write-kubeconfig-mode 644 \
+      --kube-apiserver-arg="service-node-port-range=30000-32767"
+  args:
+    creates: /etc/rancher/k3s/k3s.yaml
+  register: k3s_install_result
+
+- name: "K3s Server | Vérifier que K3s est actif"
+  systemd:
+    name: k3s
+    state: started
+    enabled: yes
+
+- name: "K3s Server | Attendre que l'API soit prête"
+  uri:
+    url: https://127.0.0.1:6443/healthz
+    method: GET
+    validate_certs: no
+    status_code: 200
+  register: api_health
+  until: api_health.status == 200
+  retries: 30
+  delay: 5
+
+- name: "K3s Server | Label nœud master"
+  shell: |
+    kubectl label node {{ ansible_hostname }} node-role.kubernetes.io/control-plane="" node-role.kubernetes.io/server="" --overwrite
+  ignore_errors: yes
+
+- name: "K3s Server | Configurer kubeconfig pour l'utilisateur ubuntu"
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+
+- name: "K3s Server | Sauvegarder le token K3s"
+  copy:
+    content: "{{ k3s_token }}"
+    dest: /etc/k3s_token
+    mode: '0600'
+
+- name: "K3s Server | Désactiver swap"
+  command: swapoff -a
+  ignore_errors: yes
+
+- name: "K3s Server | Ajouter la route pour le réseau pods"
+  shell: |
+    iptables -t nat -A POSTROUTING -s 10.42.0.0/16 ! -d 10.42.0.0/16 -j MASQUERADE
+  ignore_errors: yes

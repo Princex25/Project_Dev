@@ -1,0 +1,11 @@
+# ============================================================
+# Playbook de Monitoring — Install/Update monitoring uniquement
+# ============================================================
+# Usage : ansible-playbook -i inventory/hosts monitoring.yml
+# ============================================================
+
+- name: "=== Installation du monitoring ==="
+  hosts: k3s_servers
+  become: yes
+  roles:
+    - monitoring

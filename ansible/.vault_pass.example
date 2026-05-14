@@ -1,0 +1,5 @@
+# Fichier contenant le mot de passe Vault Ansible
+# Copier ce fichier en .vault_pass et mettre votre mot de passe
+# ⚠️ NE JAMAIS COMMITER .vault_pass
+
+CHANGE_ME_VAULT_PASSWORD

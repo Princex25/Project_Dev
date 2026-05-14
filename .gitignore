@@ -26,6 +26,14 @@ docker-compose.override.yml
 kubernetes/secret.yaml
 !kubernetes/secret.example.yaml
 
+# Ansible - secrets et fichiers sensibles
+ansible/.vault_pass
+ansible/.vault_pass.example
+!ansible/.vault_pass.example
+
+# Ansible - fichiers temporaires
+.retry
+
 # Node (si frontend JS)
 node_modules/
 npm-debug.log*

@@ -1,0 +1,45 @@
+---
+# ============================================================
+# Rôle : k3s_agent — Installation des nœuds workers K3s
+# ============================================================
+
+- name: "K3s Agent | Installation des dépendances"
+  yum:
+    name:
+      - conntrack
+      - socat
+      - nfs-utils
+    state: present
+
+- name: "K3s Agent | Désactiver swap"
+  command: swapoff -a
+  ignore_errors: yes
+
+- name: "K3s Agent | Installation de K3s Agent"
+  shell: |
+    curl -sfL https://get.k3s.io | K3S_URL=https://{{ hostvars[groups['k3s_servers'][0]]['ansible_default_ipv4']['address'] }}:6443 K3S_TOKEN={{ k3s_token }} INSTALL_K3S_VERSION={{ k3s_version }} sh -s - agent \
+      --node-ip {{ ansible_default_ipv4.address }} \
+      --docker
+  args:
+    creates: /etc/rancher/k3s/k3s.yaml
+  register: k3s_agent_install_result
+
+- name: "K3s Agent | Vérifier que K3s est actif"
+  systemd:
+    name: k3s
+    state: started
+    enabled: yes
+
+- name: "K3s Agent | Label nœud worker"
+  shell: |
+    kubectl label node {{ ansible_hostname }} node-role.kubernetes.io/worker="" --overwrite
+  ignore_errors: yes
+
+- name: "K3s Agent | Configurer kubeconfig pour ubuntu"
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'

@@ -1,0 +1,5 @@
+---
+# Defaults pour K3s Server
+k3s_version: v1.30.4+k3s1
+k3s_token: "CHANGE_ME_SECRET_TOKEN"
+k3s_cluster_name: devops-project-cluster

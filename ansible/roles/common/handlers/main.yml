@@ -1,0 +1,16 @@
+---
+# ============================================================
+# Handlers — Rôle common
+# ============================================================
+
+- name: restart chronyd
+  systemd:
+    name: chronyd
+    state: restarted
+    enabled: yes
+
+- name: restart docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes

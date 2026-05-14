@@ -1,0 +1,51 @@
+# ============================================================
+# Playbook de Provisioning — Installation de l'infrastructure
+# ============================================================
+# Usage : ansible-playbook -i inventory/hosts provision.yml
+#
+# Ce playbook installe uniquement :
+#   1. Configuration de base de tous les nœuds
+#   2. Installation du serveur K3s
+#   3. Installation des agents K3s
+# ============================================================
+
+- name: "=== Phase 1 : Configuration de base ==="
+  hosts: k3s_cluster
+  become: yes
+  roles:
+    - common
+
+- name: "=== Phase 2 : Installation du serveur K3s ==="
+  hosts: k3s_servers
+  become: yes
+  roles:
+    - k3s_server
+
+- name: "=== Phase 3 : Installation des agents K3s ==="
+  hosts: k3s_agents
+  become: yes
+  roles:
+    - k3s_agent
+
+- name: "=== Phase 4 : Vérification du cluster ==="
+  hosts: k3s_servers
+  become: yes
+  tasks:
+    - name: "Vérifier l'état des nœuds"
+      shell: |
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        k3s kubectl get nodes -o wide
+      register: node_status
+
+    - name: "Afficher les nœuds"
+      debug:
+        msg: "{{ node_status.stdout_lines }}"
+
+    - name: "Récupérer le token K3s (première connexion)"
+      shell: |
+        cat /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_output
+
+    - name: "Afficher le token (à sauvegarder !)"
+      debug:
+        msg: "TOKEN K3s : {{ k3s_token_output.stdout }}"

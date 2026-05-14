@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-project
+  namespace: devops-project
+  labels:
+    app: {{ app_name }}
+    environment: {{ environment }}
+spec:
+  replicas: {{ app_replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: {{ app_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ app_name }}
+        environment: {{ environment }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - {{ app_name }}
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: app
+          image: {{ ecr_repo }}:{{ image_tag | default('latest') }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: devops-project-config
+            - secretRef:
+                name: devops-project-secret
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/devops-project/uploads
+            - name: shared-config
+              mountPath: /app/devops-project/shared
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: {{ base_url }}/php-login/index.php
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: {{ base_url }}/php-login/index.php
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: devops-project-efs
+        - name: shared-config
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-project
+  namespace: devops-project
+  labels:
+    app: {{ app_name }}
+    environment: {{ environment }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ app_name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

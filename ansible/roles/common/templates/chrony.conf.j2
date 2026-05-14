@@ -1,0 +1,20 @@
+# Chrony configuration for K3s cluster
+# Managed by Ansible — Do not edit manually
+
+# Use public NTP servers
+pool 2.fedora.pool.ntp.org iburst
+pool 0.asia.pool.ntp.org iburst
+pool 3.europe.pool.ntp.org iburst
+
+# Allow the local network to sync
+#allow 10.0.0.0/16
+
+# Serve time even if not synced to a time source
+#local stratum 10
+
+keyfile /etc/chrony.keys
+driftfile /var/lib/chrony/drift
+
+# Log
+logdir /var/log/chrony
+log measurements statistics tracking
