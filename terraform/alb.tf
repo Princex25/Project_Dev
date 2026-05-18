@@ -44,6 +44,7 @@ resource "aws_lb_listener" "http" {
 # L'AWS Load Balancer Controller dans EKS complétera automatiquement
 # la configuration des listeners et target groups via les objets Ingress
 
+/*
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = 443
@@ -57,10 +58,11 @@ resource "aws_lb_listener" "https" {
     target_group_arn = aws_lb_target_group.app.arn
   }
 }
+*/
 
 # --- Target Group (vide — remplie par l'Ingress Controller K8s) ---
 resource "aws_lb_target_group" "app" {
-  name_prefix = "${var.project_name}-"
+  name_prefix = "alb-"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
@@ -71,7 +73,7 @@ resource "aws_lb_target_group" "app" {
     unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/devops-project/php-login/index.php"
+    path                = "//php-login/index.php"
     matcher             = "200"
     protocol            = "HTTP"
   }

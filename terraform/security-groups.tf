@@ -2,10 +2,33 @@
 # Security Groups — K3s EC2 + ALB + RDS + EFS
 # ============================================================
 
+# --- Security Group EKS Cluster ---
+resource "aws_security_group" "eks_cluster" {
+  name_prefix = "${var.project_name}-eks-cluster-${var.environment}"
+  description = "Security group for EKS cluster control plane"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-eks-cluster-sg-${var.environment}"
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 # --- Security Group K3s Server (Master) ---
 resource "aws_security_group" "k3s_server" {
   name_prefix = "${var.project_name}-k3s-server-${var.environment}"
-  description = "Security group pour le serveur K3s (master)"
+  description = "Security group for K3s server (master)"
   vpc_id      = aws_vpc.main.id
 
   # Kubernetes API Server
@@ -32,7 +55,7 @@ resource "aws_security_group" "k3s_server" {
     from_port       = 8472
     to_port         = 8472
     protocol        = "udp"
-    security_groups = [aws_security_group.k3s_agent.id, aws_security_group.k3s_server.id]
+    security_groups = [aws_security_group.k3s_agent.id]
   }
 
   # WireGuard (nouveau K3s)
@@ -41,7 +64,7 @@ resource "aws_security_group" "k3s_server" {
     from_port       = 51820
     to_port         = 51820
     protocol        = "udp"
-    security_groups = [aws_security_group.k3s_agent.id, aws_security_group.k3s_server.id]
+    security_groups = [aws_security_group.k3s_agent.id]
   }
 
   # SSH depuis le VPN/bastion
@@ -83,7 +106,7 @@ resource "aws_security_group" "k3s_server" {
 # --- Security Group K3s Agent (Worker) ---
 resource "aws_security_group" "k3s_agent" {
   name_prefix = "${var.project_name}-k3s-agent-${var.environment}"
-  description = "Security group pour les nœuds agents K3s"
+  description = "Security group for K3s agent nodes"
   vpc_id      = aws_vpc.main.id
 
   # Inter-node communication (Flannel, WireGuard)
@@ -159,7 +182,7 @@ resource "aws_security_group" "k3s_agent" {
 # --- Security Group ALB ---
 resource "aws_security_group" "alb" {
   name_prefix = "${var.project_name}-alb-${var.environment}"
-  description = "Security group pour l'Application Load Balancer"
+  description = "Security group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -188,29 +211,6 @@ resource "aws_security_group" "alb" {
 
   tags = merge(var.common_tags, {
     Name = "${var.project_name}-alb-sg-${var.environment}"
-  })
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# --- Security Group EFS ---
-resource "aws_security_group" "efs" {
-  name_prefix = "${var.project_name}-efs-${var.environment}"
-  description = "Security group pour EFS mount targets"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "NFS depuis les nœuds K3s"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.k3s_server.id, aws_security_group.k3s_agent.id]
-  }
-
-  tags = merge(var.common_tags, {
-    Name = "${var.project_name}-efs-sg-${var.environment}"
   })
 
   lifecycle {

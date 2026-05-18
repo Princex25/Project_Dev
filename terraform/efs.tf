@@ -22,9 +22,7 @@ resource "aws_efs_backup_policy" "main" {
   file_system_id = aws_efs_file_system.main.id
 
   backup_policy {
-    automatic_backup_policy {
-      status = "ENABLED"
-    }
+    status = "ENABLED"
   }
 }
 
@@ -44,11 +42,11 @@ resource "aws_security_group" "efs" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "NFS depuis les pods EKS"
+    description     = "NFS depuis les pods K3s"
     from_port       = 2049
     to_port         = 2049
     protocol        = "tcp"
-    security_groups = [aws_security_group.eks_nodes.id]
+    security_groups = [aws_security_group.k3s_server.id, aws_security_group.k3s_agent.id]
   }
 
   tags = merge(var.common_tags, {

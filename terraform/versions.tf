@@ -29,11 +29,11 @@ terraform {
   }
 
   # Backend S3 pour stocker l'état Terraform
-  backend "s3" {
-    bucket         = "devops-project-terraform-state"
-    key            = "terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "devops-project-terraform-lock"
-    encrypt        = true
-  }
+  # backend "s3" {
+  #   bucket         = "-terraform-state"
+  #   key            = "terraform.tfstate"
+  #   region         = "us-east-1"
+  #   dynamodb_table = "-terraform-lock"
+  #   encrypt        = true
+  # }
 }

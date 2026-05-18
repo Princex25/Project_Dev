@@ -23,7 +23,7 @@ variable "environment" {
 variable "project_name" {
   description = "Nom du projet"
   type        = string
-  default     = "devops-project"
+  default     = "d2026-05-15"
 }
 
 # --- VPC ---
@@ -45,6 +45,37 @@ variable "private_subnet_cidrs" {
   default     = ["10.0.10.0/24", "10.0.20.0/24", "10.0.30.0/24"]
 }
 
+# --- EKS ---
+variable "eks_cluster_version" {
+  description = "Version du cluster EKS"
+  type        = string
+  default     = "1.30"
+}
+
+variable "eks_node_instance_type" {
+  description = "Type d'instance pour les nœuds EKS"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "eks_node_min_size" {
+  description = "Nombre minimum de nœuds EKS"
+  type        = number
+  default     = 3
+}
+
+variable "eks_node_max_size" {
+  description = "Nombre maximum de nœuds EKS"
+  type        = number
+  default     = 6
+}
+
+variable "eks_node_desired_size" {
+  description = "Nombre souhaité de nœuds EKS"
+  type        = number
+  default     = 3
+}
+
 # --- K3s ---
 variable "k3s_version" {
   description = "Version de K3s"
@@ -55,13 +86,13 @@ variable "k3s_version" {
 variable "k3s_server_instance_type" {
   description = "Type d'instance pour le serveur K3s"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.small"
 }
 
 variable "k3s_agent_instance_type" {
   description = "Type d'instance pour les agents K3s"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.small"
 }
 
 variable "k3s_agent_min_size" {
@@ -126,7 +157,7 @@ variable "common_tags" {
   description = "Tags communs à toutes les ressources"
   type        = map(string)
   default = {
-    Project     = "devops-project"
+    Project     = ""
     ManagedBy   = "terraform"
   }
 }

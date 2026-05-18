@@ -9,11 +9,11 @@ resource "aws_security_group" "rds" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "MySQL depuis les pods EKS"
+    description     = "MySQL depuis les pods K3s"
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.eks_nodes.id]
+    security_groups = [aws_security_group.k3s_server.id, aws_security_group.k3s_agent.id]
   }
 
   egress {
@@ -34,11 +34,11 @@ resource "aws_security_group" "rds" {
 
 # --- Subnet Group RDS ---
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-rds-subnet-${var.environment}"
-  subnet_ids = aws_subnet.private[*].id
+  name       = "devops-project-rds-subnet-dev"
+  subnet_ids = ["subnet-0991015ed2fbeb708", "subnet-04f6bdcbbb2c31a2f", "subnet-029380706618b788d"]
 
   tags = merge(var.common_tags, {
-    Name = "${var.project_name}-rds-subnet-group-${var.environment}"
+    Name = "devops-project-rds-subnet-group-dev"
   })
 }
 
@@ -47,7 +47,7 @@ resource "aws_db_instance" "main" {
   identifier = "${var.project_name}-rds-${var.environment}"
 
   engine               = "mysql"
-  engine_version       = "8.0.36"
+  engine_version       = "8.0.46"
   instance_class       = var.rds_instance_class
   allocated_storage    = var.rds_allocated_storage
   max_allocated_storage = 100
@@ -64,7 +64,7 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
   auto_minor_version_upgrade = true
 
-  backup_retention_period = 7
+  backup_retention_period = 0
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
 
@@ -103,5 +103,5 @@ resource "random_password" "rds" {
   lower   = true
   numeric = true
 
-  override_special = "!@#$%^&*()-_=+"
+  override_special = "!#$%^&*()-_=+"
 }

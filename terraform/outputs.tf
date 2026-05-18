@@ -117,6 +117,11 @@ output "k3s_agent_sg_id" {
   value       = aws_security_group.k3s_agent.id
 }
 
+output "eks_cluster_sg_id" {
+  description = "ID du security group du cluster EKS"
+  value       = aws_security_group.eks_cluster.id
+}
+
 output "alb_sg_id" {
   description = "ID du security group de l'ALB"
   value       = aws_security_group.alb.id
@@ -130,4 +135,20 @@ output "rds_sg_id" {
 output "efs_sg_id" {
   description = "ID du security group d'EFS"
   value       = aws_security_group.efs.id
+}
+
+# --- EKS Cluster ---
+output "eks_cluster_name" {
+  description = "Nom du cluster EKS"
+  value       = aws_eks_cluster.main.name
+}
+
+output "eks_cluster_endpoint" {
+  description = "Endpoint du cluster EKS"
+  value       = aws_eks_cluster.main.endpoint
+}
+
+output "eks_cluster_certificate_authority_data" {
+  description = "Certificat CA du cluster EKS"
+  value       = aws_eks_cluster.main.certificate_authority[0].data
 }

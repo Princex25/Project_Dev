@@ -23,7 +23,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-2024*"]
+    values = ["al2023-ami-minimal-2023*"]
   }
 
   filter {
@@ -48,11 +48,18 @@ resource "aws_launch_template" "k3s_server" {
   vpc_security_group_ids = [aws_security_group.k3s_server.id]
 
   user_data = base64encode(templatefile("${path.module}/templates/k3s-server-cloud-init.sh", {
-    k3s_version     = var.k3s_version
-    k3s_token       = random_string.k3s_token.result
+    k3s_version      = var.k3s_version
+    K3S_VERSION      = var.k3s_version
+    k3s_token        = random_string.k3s_token.result
+    K3S_TOKEN        = random_string.k3s_token.result
     k3s_cluster_name = "${var.project_name}-cluster"
-    db_endpoint     = aws_db_instance.main.endpoint
-    db_name         = "gestion_demandes"
+    K3S_CLUSTER_NAME = "${var.project_name}-cluster"
+    db_endpoint      = aws_db_instance.main.endpoint
+    DB_ENDPOINT      = aws_db_instance.main.endpoint
+    db_name          = "gestion_demandes"
+    DB_NAME          = "gestion_demandes"
+    node_name        = "${var.project_name}-server"
+    NODE_NAME        = "${var.project_name}-server"
   }))
 
   tag_specifications {
@@ -98,11 +105,18 @@ resource "aws_instance" "k3s_server" {
   vpc_security_group_ids  = [aws_security_group.k3s_server.id]
 
   user_data = base64encode(templatefile("${path.module}/templates/k3s-server-cloud-init.sh", {
-    k3s_version       = var.k3s_version
-    k3s_token         = random_string.k3s_token.result
-    k3s_cluster_name  = "${var.project_name}-cluster"
-    db_endpoint       = aws_db_instance.main.endpoint
-    db_name           = "gestion_demandes"
+    k3s_version      = var.k3s_version
+    K3S_VERSION      = var.k3s_version
+    k3s_token        = random_string.k3s_token.result
+    K3S_TOKEN        = random_string.k3s_token.result
+    k3s_cluster_name = "${var.project_name}-cluster"
+    K3S_CLUSTER_NAME = "${var.project_name}-cluster"
+    db_endpoint      = aws_db_instance.main.endpoint
+    DB_ENDPOINT      = aws_db_instance.main.endpoint
+    db_name          = "gestion_demandes"
+    DB_NAME          = "gestion_demandes"
+    node_name        = "${var.project_name}-server"
+    NODE_NAME        = "${var.project_name}-server"
   }))
 
   root_block_device {
@@ -138,9 +152,15 @@ resource "aws_launch_template" "k3s_agent" {
 
   user_data = base64encode(templatefile("${path.module}/templates/k3s-agent-cloud-init.sh", {
     k3s_version       = var.k3s_version
+    K3S_VERSION       = var.k3s_version
     k3s_token         = random_string.k3s_token.result
+    K3S_TOKEN         = random_string.k3s_token.result
     k3s_server_url    = "https://${aws_instance.k3s_server.private_ip}:6443"
+    K3S_SERVER_URL    = "https://${aws_instance.k3s_server.private_ip}:6443"
     k3s_cluster_name  = "${var.project_name}-cluster"
+    K3S_CLUSTER_NAME  = "${var.project_name}-cluster"
+    node_name         = "${var.project_name}-agent"
+    NODE_NAME         = "${var.project_name}-agent"
   }))
 
   tag_specifications {

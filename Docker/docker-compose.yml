@@ -11,17 +11,18 @@ services:
     ports:
       - "8080:80"
     environment:
+      WEB_DOCUMENT_ROOT: /app
+      WEB_DOCUMENT_INDEX: index.php
       DB_HOST: db
       DB_NAME: gestion_demandes
       DB_USER: app
       DB_PASS: app
       DB_PORT: 3306
-      BASE_URL: /devops-project
+      APP_BASE_URL: "http://localhost:8080"
     depends_on:
       - db
     volumes:
-      - ./App/uploads/demandes:/app/devops-project/uploads/demandes
-      - ./App/shared/config.php:/app/devops-project/shared/config.php
+      - ./App/uploads:/app/devops-project/uploads
     restart: unless-stopped
 
   db:
