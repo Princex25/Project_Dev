@@ -12,6 +12,17 @@ pipeline {
                 echo "✅ Code récupéré depuis GitHub"
             }
         }
+        stage('Test - Unit') {
+            steps {
+                echo "🧪 Installation des dépendances Composer..."
+                sh 'docker run --rm -v $(pwd):/app -w /app composer:latest composer install --no-interaction --no-progress --prefer-dist'
+                
+                echo "🧪 Exécution des tests Unit..."
+                sh 'docker run --rm -v $(pwd):/app -w /app php:8.2-cli vendor/bin/phpunit --testsuite Unit --colors=never'
+                
+                echo "✅ Tests Unit passés avec succès"
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t devops-project-web:latest .'
@@ -28,11 +39,14 @@ pipeline {
         }
     }
     post {
+        always {
+            echo "📊 Pipeline terminé"
+        }
         success {
             echo "🎉 Application déployée avec succès"
         }
         failure {
-            echo "❌ Échec du déploiement"
+            echo "❌ Échec du pipeline"
         }
     }
 }
