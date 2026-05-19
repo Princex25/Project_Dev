@@ -1,15 +1,10 @@
 pipeline {
     agent any
-
-    triggers {
-        githubPush()
-    }
-
     environment {
         IMAGE_NAME = "devops-project-web"
         KUBE_NAMESPACE = "devops-project"
+        KUBECONFIG = "/var/jenkins_home/.kube/config"
     }
-
     stages {
         stage('Checkout') {
             steps {
@@ -17,32 +12,24 @@ pipeline {
                 echo "✅ Code récupéré depuis GitHub"
             }
         }
-
         stage('Build Docker Image') {
             steps {
-                sh """
-                    echo "🏗️ Build image..."
-                    docker build -t ${IMAGE_NAME}:latest .
-                    echo "✅ Image buildée localement"
-                """
+                sh 'docker build -t devops-project-web:latest .'
+                echo "✅ Image buildée localement"
             }
         }
-
         stage('Deploy Kubernetes') {
             steps {
-                sh """
-                    echo "☸️ Redémarrage des pods..."
-                    kubectl rollout restart deployment/devops-project -n ${KUBE_NAMESPACE}
-                    kubectl rollout status deployment/devops-project -n ${KUBE_NAMESPACE} --timeout=120s
-                    echo "✅ Déployé avec succès !"
-                """
+                echo "☸️ Redémarrage des pods..."
+                sh 'kubectl rollout restart deployment/devops-project -n devops-project'
+                sh 'kubectl rollout status deployment/devops-project -n devops-project --timeout=120s'
+                echo "✅ Déployé avec succès"
             }
         }
     }
-
     post {
         success {
-            echo "🎉 Application déployée : http://54.175.200.207/devops-project"
+            echo "🎉 Application déployée avec succès"
         }
         failure {
             echo "❌ Échec du déploiement"
