@@ -52,18 +52,19 @@ pipeline {
         }
 
         stage('Push vers ECR') {
-            steps {
-                sh """
-                    echo "📤 Authentification auprès d'ECR..."
-                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
-
-                    echo "📤 Pushing de l'image vers ECR..."
-                    docker push ${ECR_REPO}:${IMAGE_TAG}
-                    docker push ${ECR_REPO}:latest
-                    echo "✅ Image pushée avec succès dans ECR"
-                """
-            }
+    steps {
+        withCredentials([
+            string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+            string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+        ]) {
+            sh '''
+                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789.dkr.ecr.us-east-1.amazonaws.com/devops-project
+                docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/devops-project:latest
+                docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/devops-project:build-${BUILD_ID}
+            '''
         }
+    }
+}
 
         // ============================================================
         // ÉTAPES TERRAFORM
