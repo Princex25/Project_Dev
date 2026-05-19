@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: project_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  app:
+    build: .
+    container_name: project_app
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./tests:/app/tests
+      - ./phpunit.xml:/app/phpunit.xml
+      - ./composer.json:/app/composer.json
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+    depends_on:
+      - db
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: always
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/local/bin/kubectl:/usr/local/bin/kubectl:ro
+      - /home/ubuntu/.kube:/var/jenkins_home/.kube:ro
+    group_add:
+      - "999"
+
+volumes:
+  mysql_data:
+  jenkins_home:
+
+# (À ajouter manuellement dans le service jenkins:)
+# volumes:
+#   - /usr/local/bin/kubectl:/usr/local/bin/kubectl:ro
+#   - /home/ubuntu/.kube:/var/jenkins_home/.kube:ro

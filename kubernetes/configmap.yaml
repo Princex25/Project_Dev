@@ -4,7 +4,7 @@ metadata:
   name: devops-project-config
   namespace: devops-project
 data:
-  DB_HOST: "devops-project-rds.cluster-xxxx.us-east-1.rds.amazonaws.com"
+  DB_HOST: "172.31.22.163"
   DB_PORT: "3306"
   DB_NAME: "gestion_demandes"
   BASE_URL: "/devops-project"

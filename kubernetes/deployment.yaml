@@ -46,8 +46,6 @@ spec:
           volumeMounts:
             - name: uploads
               mountPath: /app/devops-project/uploads
-            - name: shared-config
-              mountPath: /app/devops-project/shared
           resources:
             requests:
               cpu: "100m"
@@ -71,8 +69,6 @@ spec:
         - name: uploads
           persistentVolumeClaim:
             claimName: devops-project-efs
-        - name: shared-config
-          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
