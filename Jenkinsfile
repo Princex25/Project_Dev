@@ -15,10 +15,10 @@ pipeline {
         stage('Test - Unit') {
             steps {
                 echo "🧪 Installation des dépendances Composer..."
-                sh 'docker run --rm -v $(pwd):/app -w /app composer:latest composer install --no-interaction --no-progress --prefer-dist'
+                sh 'composer install --no-interaction --no-progress --prefer-dist'
                 
                 echo "🧪 Exécution des tests Unit..."
-                sh 'docker run --rm -v $(pwd):/app -w /app php:8.2-cli vendor/bin/phpunit --testsuite Unit --colors=never'
+                sh 'vendor/bin/phpunit --testsuite Unit --colors=never'
                 
                 echo "✅ Tests Unit passés avec succès"
             }
