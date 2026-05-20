@@ -44,7 +44,7 @@ unset($_SESSION['login_error']);
                 </li>
                 <li class="promo-list-item">
                   <span class="promo-list-icon" aria-hidden="true"></span>
-                  <p class="promo-list-text">Suivi en temps réel.</p>
+                  <p class="promo-list-text">Suivi en temps réel...</p>
                 </li>
                 <li class="promo-list-item">
                   <span class="promo-list-icon" aria-hidden="true"></span>
